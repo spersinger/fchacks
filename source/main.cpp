@@ -2,12 +2,23 @@
  *
  * Name: Christapha "He" Heho
  * Date: 1-1-1987
- * Purpose: The bite of '87
+ * Purpose: Swaggy Pone Pone
  */
+
+/* Checklist:
+ * Send data from main to visualizer ☑️
+ * Recieve data from some kind of file to main ☑️
+ * Edit threshold in main from visualizer ☑️
+ * Generate random noise data into file for main ☑️
+ * mAKE IT lok good 
+ * errors for patient and doctor if the tension+compression reaches the threshold set by the doctor ☑️
+ */
+
 #include <iostream>
 #include <time.h>
 #include <random>
-#include "fastNoise.h"
+#include "FastNoise.h"
+#include "termColor.hpp"
 
 using namespace std;
 
@@ -24,7 +35,6 @@ class MatrixNode {
 
         MatrixNode() {
             zero();
-            random();
         }
         void zero() {
             for (int i = 0; i < 4; i++) {
@@ -32,24 +42,32 @@ class MatrixNode {
             }
             compression = 0;
         }
-        void random() {
-            for (int i = 0; i < 4; i++) {
-                tension[i] = fRand(0, 1);
-            }
-            compression = fRand(0, 1);
-        }
         void getData(int x, int y) {
+            
             //This is where we would be getting the data from the device
             //However since we do not have a working device prototype instead I have decided to use simplex noise to emulate the compression put on a persons leg
             FastNoiseLite noise;
-            noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+            noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2S);
+            noise.SetFractalType(FastNoiseLite::FractalType_FBm);
             noise.SetFrequency(0.1);
-            noise.SetSeed(time(NULL)); 
+            noise.SetFractalLacunarity(fRand(0.1,2));
+            //DO NMOT TOUCH
+            noise.SetSeed(time(NULL));
 
-            //SCUFFED
+            FastNoiseLite comNoise;
+            comNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2S);
+            comNoise.SetFractalType(FastNoiseLite::FractalType_FBm);
+            comNoise.SetFrequency(0.1);
+            comNoise.SetFractalLacunarity(fRand(0.1,2));
+            //DO NMOT TOUCH
+            comNoise.SetSeed((time(NULL)+1));
+
             for (int i = 0; i < 4; i++) {
-                tension[i] = noise.GetNoise((float)x,(float)y);
+                double val = noise.GetNoise((float)x,(float)y);
+                tension[i] = val;
             }
+            double val = comNoise.GetNoise((float)x,(float)y);
+            compression = val;
         }
         double averageTension() {
             double avg;
@@ -62,7 +80,12 @@ class MatrixNode {
 };
 // Main Function
 int main (int argc, char *argv[]) {
+
     int sizeX = 20, sizeY = 20;
+    //OUTPUT TO STDIN SO THAT VISUALIZER.CPP CAN READ IT
+    //lines 11-12 visualizer.cpp
+    cout << sizeX << endl;
+    cout << sizeY << endl;
     srand(time(NULL));
     MatrixNode nodes[sizeX*sizeY];
     //getting data from sensors (gets a noise value based on it)
@@ -73,28 +96,13 @@ int main (int argc, char *argv[]) {
             nodes[x+sizeX*y].yLocal = y;
         }
     }
-    double threshold = 0.4;
-    //DEBUG CRAP
-    //for (int i = 0; i < sizeX*sizeY; i++) {
-    //    for (int j = 0; j < 4; j++) {
-    //        if (nodes[i].tension[j] >= threshold) {
-    //            cout << "Threshold (" << i << ", " << j << ", coord(" << nodes[i].xLocal << "," << nodes[i].yLocal << ")): " << nodes[i].tension[j] << endl;
-    //        }
-    //    }
-    //}
-
-    //display shit monkaS they can see dowd
     //todo
     for (int x = 0; x < sizeX; x++) {
         for (int y = 0; y < sizeY; y++) {
-            if (nodes[x+sizeX*y].averageTension() >= threshold)
-                cout << "[X]";
-            else 
-                cout << "[ ]";
-
+            nodes[x+sizeX*y].getData(x, y);
+            cout << nodes[x+sizeX*y].averageTension() << endl;
+            cout << nodes[x+sizeX*y].compression << endl;
         }
-        cout << endl;
     }
-
     return 0;
 }
