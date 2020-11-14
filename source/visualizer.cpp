@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     }
     //Alerts user if 15 or more nodes are above the safety limit
     if (threshCounterC >= 15 || threshCounterT >= 15) {
-        std::cout << "BEEP BEEP BEEP BEEP" << std::endl;
+        std::cout << "There is too much pressure on your wound, seek your doctors attention as soon as possible..." << std::endl;
         return 0;
     }
     std::cout << std::endl;
