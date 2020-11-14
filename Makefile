@@ -6,7 +6,7 @@
 ###
 ###
 
-.PHONY: clean install uninstall
+.PHONY: clean run
 
 CC = g++                        # compiler to use
 
@@ -23,5 +23,9 @@ dvd:
 
 clean:
 		@echo "Cleaning up..."
-		@rm dvd
+		@rm main
 		@echo "Done!"
+run:dvd
+	@echo "Running..."
+	@./main
+	@echo "Done!"
